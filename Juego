@@ -1,0 +1,225 @@
+package juego;
+
+public class CuatroEnLinea {
+
+	private Casillero[][] tablero;
+	private String nombreJugadorRojo;
+	private String nombreJugadorAmarillo;
+	private int cantidadFichas;
+	boolean yaTiroRojo;
+	boolean ganoRojo;
+
+	/**
+	 * pre : 'filas' y 'columnas' son mayores o iguales a 4. post: empieza el
+	 * juego entre el jugador que tiene fichas rojas, identificado como
+	 * 'jugadorRojo' y el jugador que tiene fichas amarillas, identificado como
+	 * 'jugadorAmarillo'. Todo el tablero está vacío.
+	 * 
+	 * @param filas
+	 *            : cantidad de filas que tiene el tablero.
+	 * @param columnas
+	 *            : cantidad de columnas que tiene el tablero.
+	 * @param jugadorRojo
+	 *            : nombre del jugador con fichas rojas.
+	 * @param jugadorAmarillo
+	 *            : nombre del jugador con fichas amarillas.
+	 */
+	public CuatroEnLinea(int filas, int columnas, String jugadorRojo,
+			String jugadorAmarillo) {
+		if (filas >= 4 && columnas >= 4) {
+			tablero = new Casillero[filas][columnas];
+			for (int fila = 0; fila < filas; fila++) {
+				for (int columna = 0; columna < columnas; columna++) {
+					tablero[fila][columna] = Casillero.VACIO;
+				}
+			}
+		}
+		nombreJugadorRojo = jugadorRojo;
+		nombreJugadorAmarillo = jugadorAmarillo;
+		cantidadFichas = filas * columnas;
+	}
+
+	/**
+	 * post: devuelve la cantidad máxima de fichas que se pueden apilar en el
+	 * tablero.
+	 */
+	public int contarFilas() {
+		int cantidadFilas = tablero.length;
+		return cantidadFilas;
+	}
+
+	/**
+	 * post: devuelve la cantidad máxima de fichas que se pueden alinear en el
+	 * tablero.
+	 */
+	public int contarColumnas() {
+		int cantidadColumnas = tablero[0].length;
+		return cantidadColumnas;
+	}
+
+	/**
+	 * pre : fila está en el intervalo [1, contarFilas()], columnas está en el
+	 * intervalo [1, contarColumnas()]. post: indica qué ocupa el casillero en
+	 * la posición dada por fila y columna.
+	 * 
+	 * @param fila
+	 * @param columna
+	 */
+	public Casillero obtenerCasillero(int fila, int columna) {
+		if (fila >= 0 && fila <= contarFilas() - 1 && columna >= 0
+				&& columna <= contarColumnas()) {
+			return tablero[fila][columna];
+		} else {
+			Error error = new Error(
+					"La cantidad de filas o columnas ingresado es incorecta");
+			throw error;
+		}
+	}
+
+	/**
+	 * pre : el juego no terminó, columna está en el intervalo [1,
+	 * contarColumnas()] y aún queda un Casillero.VACIO en la columna indicada.
+	 * post: deja caer una ficha en la columna indicada.
+	 * 
+	 * @param columna
+	 */
+	public void soltarFichaEnColumna(int columna) {
+		if(columna>=0 && columna<contarColumnas()){
+			int oportunidadParaTirar = 0;
+			if (!termino()) {
+				for (int filaDondeEmpieza = contarFilas() - 1; filaDondeEmpieza >= 0; filaDondeEmpieza--) {
+					if (tablero[filaDondeEmpieza][columna-1] == Casillero.VACIO
+							&& oportunidadParaTirar < 1 && yaTiroRojo == false) {
+						tablero[filaDondeEmpieza][columna-1] = Casillero.ROJO;
+						yaTiroRojo = true;
+						oportunidadParaTirar++;
+						cantidadFichas--;
+						imprimirTablero();
+						if (hayCombinacion() && hayGanador()) {
+							System.out.println(obtenerGanador());
+						}
+					}
+					if (tablero[filaDondeEmpieza][columna-1] == Casillero.VACIO
+							&& oportunidadParaTirar < 1 && yaTiroRojo == true) {
+						tablero[filaDondeEmpieza][columna-1] = Casillero.AMARILLO;
+						yaTiroRojo = false;
+						oportunidadParaTirar++;
+						cantidadFichas--;
+						imprimirTablero();
+						if (hayCombinacion() && hayGanador()) {
+							System.out.println(obtenerGanador());
+						}
+					}
+					if (tablero[0][columna] != Casillero.VACIO) {
+						Error error = new Error(
+							"No se puede arreojar mas fichas en la columna");
+						throw error;
+				}
+			}
+		}
+		}
+	}
+
+	/**
+	 * post: indica si el juego terminó porque uno de los jugadores ganó o no
+	 * existen casilleros vacíos.
+	 */
+	public boolean termino() {
+		if (cantidadFichas == 0 || hayCombinacion()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * post: indica si el juego terminó y tiene un ganador.
+	 */
+	public boolean hayGanador() {
+		if (hayCombinacion()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * pre : el juego terminó. post: devuelve el nombre del jugador que ganó el
+	 * juego.
+	 */
+	public String obtenerGanador() {
+		String ganador;
+		if (ganoRojo && hayGanador()) {
+			ganador = nombreJugadorRojo;
+			return "El ganador es " + ganador;
+		} else {
+			ganador = nombreJugadorAmarillo;
+			return "El ganador es " + ganador;
+		}
+	}
+
+	// IMPRIMIR TABLERO
+	private void imprimirTablero() {
+		for (int fila = 0; fila < contarFilas(); fila++) {
+			for (int columnas = 0; columnas < contarColumnas(); columnas++) {
+				System.out.print(tablero[fila][columnas] + "             ");
+			}
+			System.out.println("   ");
+		}
+	}
+
+	// Recorre el tablero para ver si hay combinaciones
+	private boolean hayCombinacion() {
+		for (int fila = contarFilas() - 1; fila >= 0 && fila - 3 >= 0; fila--) {
+			for (int columna = 0; columna < contarColumnas() - 1
+					&& columna + 3 <= contarColumnas() - 1; columna++) {
+				// combinacion horizontal roja
+				if (tablero[fila][columna] == Casillero.ROJO
+						&& tablero[fila][columna + 1] == Casillero.ROJO
+						&& tablero[fila][columna + 2] == Casillero.ROJO
+						&& tablero[fila][columna + 3] == Casillero.ROJO) {
+					ganoRojo = true;
+					return true;
+				}
+				// combinacion horizontal amarilla
+				if (tablero[fila][columna] == Casillero.AMARILLO
+						&& tablero[fila][columna + 1] == Casillero.AMARILLO
+						&& tablero[fila][columna + 2] == Casillero.AMARILLO
+						&& tablero[fila][columna + 3] == Casillero.AMARILLO) {
+					return true;
+				}
+				// combinacio vertical roja
+				if (tablero[fila][columna] == Casillero.ROJO
+						&& tablero[fila - 1][columna] == Casillero.ROJO
+						&& tablero[fila - 2][columna] == Casillero.ROJO
+						&& tablero[fila - 3][columna] == Casillero.ROJO) {
+					ganoRojo = true;
+					return true;
+				}
+				// combinacion vertical amarilla
+				if (tablero[fila][columna] == Casillero.AMARILLO
+						&& tablero[fila - 1][columna] == Casillero.AMARILLO
+						&& tablero[fila - 2][columna] == Casillero.AMARILLO
+						&& tablero[fila - 3][columna] == Casillero.AMARILLO) {
+					return true;
+				}
+				// combinacion diagonal roja
+				if (tablero[fila][columna] == Casillero.ROJO
+						&& tablero[fila - 1][columna + 1] == Casillero.ROJO
+						&& tablero[fila - 2][columna + 2] == Casillero.ROJO
+						&& tablero[fila - 3][columna + 3] == Casillero.ROJO) {
+					ganoRojo = true;
+					return true;
+				}
+				// combinacion diagonal amarilla
+				if (tablero[fila][columna] == Casillero.AMARILLO
+						&& tablero[fila - 1][columna + 1] == Casillero.AMARILLO
+						&& tablero[fila - 2][columna + 2] == Casillero.AMARILLO
+						&& tablero[fila - 3][columna + 3] == Casillero.AMARILLO) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+}
